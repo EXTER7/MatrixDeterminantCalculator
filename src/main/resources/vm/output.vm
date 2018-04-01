@@ -1,0 +1,375 @@
+#set($h = '#')
+#macro(frac,$val)
+    #if(${val.denominator} == 1)
+        <span>${val.numerator}</span>
+    #else
+        #if( ${val.numerator} < 0)
+            <span style="margin-right=1px;">-</span>
+            #set($num = 0 - ${val.numerator})
+        #else
+            #set($num = ${val.numerator})
+        #end
+        <div class="frac">
+            <span class="fracTop">$num</span>
+            <span class="fracBottom">${val.denominator}</span>
+        </div>
+    #end
+#end
+#macro(mat,$no)
+    M#if($no > 0)<sup>$no</sup>#end
+#end
+#macro(cof,$no,$row,$col)
+    C#if($no > 0)<sup>$no</sup>#end<sub>$row,$col</sub>
+#end
+#macro(printMatrix,$matrix)
+    <table class="determinantTable">
+        #set($size = $matrix.size - 1)
+        #foreach($i in [0..$size])
+            <tr>
+                #foreach($j in [0..$size])
+                    <td class="matrixCell">#frac(${matrix.getElement($i,$j)})</td>
+                #end
+            </tr>  
+        #end
+    </table>
+#end
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width; initial-scale=1.0">
+        <title>Matrix Determinant Calculator</title>
+        <style>
+            h1 {
+                font-size: 20px;
+                font-family: sans-serif;
+                text-size-adjust: none;
+            }
+            span {
+                white-space: nowrap;
+                hyphens: none;
+                font-size: 15px;
+                font-family: sans-serif;
+                text-size-adjust: none;
+            }
+            table {
+                vertical-align: center;
+                border-collapse: collapse;
+                border: 0px;
+                padding: 0px;
+                margin: auto;
+            }
+            td {
+                white-space: nowrap;
+                hyphens: none;
+                font-size: 15px;
+                font-family: sans-serif;
+                vertical-align: center;
+                text-size-adjust: none;
+            }
+            .determinantTable {
+                border-collapse: collapse;
+                padding: 0px;
+                border-left: 1px solid black;
+                border-right: 1px solid black;
+                margin: auto;
+            } 
+            .matrixCell {
+                padding: 5px;
+                padding-left: 10px;
+                padding-right: 10px;
+                text-align: right;
+            } 
+            .rhsCell {
+                padding: 5px;
+                padding-left: 4px;
+                padding-right: 4px;
+                text-align: left;
+            } 
+            .lhsCell {
+                padding: 5px;
+                padding-left: 4px;
+                padding-right: 4px;
+                text-align: right;
+                vertical-align: center;
+            } 
+            .center {
+                margin: auto;
+                width: 100%;
+                text-align: center;
+                display: inline-table;
+                font-size: 15px;
+                font-family: sans-serif;
+                text-size-adjust: none;
+            }
+            .frac {
+                display: inline-block;
+                position: relative;
+                vertical-align: middle;
+                text-align: center;
+                margin: 0;
+            }
+            .fracTop {
+                font-size: 11px;
+                display: block;
+                margin: 0;
+                letter-spacing: 0.001em;
+            }
+            .fracBottom {
+                font-size: 11px;
+                border-top: 1px solid black;
+                display: block;
+                margin: 0;
+                letter-spacing: 0.001em;
+            }
+        </style>
+    </head>
+    <body style="background-color:#EAEAEA;text-color=black;">
+        <div class="center">
+            <h1>Solution:</h1>
+            <table>
+                <tr>
+                    <td class="lhsCell">
+                        <span style="font-size: 18px;">#mat(0)&ensp;=&ensp;</span>
+                    </td>
+                    <td>
+                        #printMatrix($input)
+                    </td>
+                    <td class="rhsCell">
+                        <span style="font-size: 18px;">&ensp;=&ensp;#frac($solution)</span>
+                    </td>
+                </tr>  
+            </table>
+            <br />
+            <br />
+            <h1>Process:</h1>
+            #foreach($step in $process)
+                <br />
+                <br />
+                #if(${step.type} == "ELEMENTS")
+                    <table><tr><td>
+                        <span>
+                            #set($bidx = ${step.elementsIndex} + 1)
+                            Using#if(${step.isElementsColumn()}) column #else row #end ${bidx} of #mat(${step.matrixNo}):
+                        </span>
+                    </td></tr></table>
+                    <br />
+                    <table>
+                        <tr>
+                            <td class="lhsCell">
+                                <span>
+                                    #mat(${step.matrixNo})
+                                </span>
+                            </td>
+                            <td class="rhsCell">
+                                <span>
+                                    &ensp;=&ensp;
+                                    #set($delim = "")
+                                    #foreach($k in ${step.elements})
+                                        #set($i = ${step.getElementRow($k)} + 1)
+                                        #set($j = ${step.getElementColumn($k)} + 1)
+                                        ${delim}(#mat(${step.matrixNo})<sub>$i,$j</sub>)#cof(${step.matrixNo},$i,$j)
+                                        #set($delim = "&ensp;+&ensp;")
+                                    #end
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td class="rhsCell">
+                                <span>
+                                    &ensp;=&ensp;
+                                    #set($delim = "")
+                                    #foreach($k in ${step.elements})
+                                        #set($i = ${step.getElementRow($k)})
+                                        #set($j = ${step.getElementColumn($k)})
+                                        #set($id = $i + 1)
+                                        #set($jd = $j + 1)
+                                        ${delim}(#frac(${step.source.getElement($i,$j)}))#cof(${step.matrixNo},$id,$jd)
+                                        #set($delim = "&ensp;+&ensp;")
+                                    #end
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                #end
+                #if(${step.type} == "MINOR")
+                    #set($i = ${step.row} + 1)
+                    #set($j = ${step.column} + 1)
+                    <table><tr><td>
+                        <span>
+                            #cof(${step.parentMatrixNo},$i,$j)
+                            &ensp;=&ensp;
+                            (-1)<sup>$i+$j</sup>#mat(${step.matrixNo})
+                        </span>
+                    </td></tr></table>
+                    <br/>
+                    <br/>
+                    <table>
+                        <tr>
+                            <td class="lhsCell">
+                                <span>
+                                    #mat(${step.matrixNo})
+                                    &ensp;=&ensp;
+                                    min<sub>$i,$j</sub>(#mat(${step.parentMatrixNo}))
+                                    &ensp;=&ensp;
+                                </span>
+                            </td>
+                            <td>
+                                #printMatrix(${step.minorMatrix})
+                            </td>
+                            #if(${step.result.size} == 1)
+                                <td class="rhsCell">=&ensp;#frac(${step.result.getElement(0,0)})</td>
+                            #end
+                        </tr>  
+                    </table>
+                    <br /> 
+                #end
+                #if(${step.type} == "COFACTOR")
+                    #set($i = ${step.row} + 1)
+                    #set($j = ${step.column} + 1)
+                    <table>
+                        <tr>
+                            <td class="lhsCell">
+                                <span>
+                                    #cof(${step.parentMatrixNo},$i,$j)
+                                </span>
+                            </td>
+                            <td class="rhsCell" >
+                                &ensp;=&ensp;
+                                (-1)<sup>$i+$j</sup>#mat(${step.matrixNo})
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td></td>
+                            <td class="rhsCell" >
+                                &ensp;=&ensp;
+                                (-1)<sup>$i+$j</sup>(#frac(${step.minor}))
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td></td>
+                            <td class="rhsCell" >
+                                #set($exp = $i + $j)
+                                &ensp;=&ensp;
+                                (-1)<sup>$exp</sup>(#frac(${step.minor}))
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td></td>
+                            <td class="rhsCell" >
+                                &ensp;=&ensp;
+                                (${step.cofactor})(#frac(${step.minor}))
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td></td>
+                            <td class="rhsCell" >
+                                &ensp;=&ensp;
+                                #frac(${step.cofactorMinor})
+                            </td>
+                        </tr>  
+                    </table>
+                    <br /> 
+                #end
+                #if(${step.type} == "SUM")
+                    <table>
+                        <tr>
+                            <td class="lhsCell">
+                                <span>
+                                    #mat(${step.matrixNo})
+                                </span>
+                            </td>
+                            <td class="rhsCell">
+                                <span>
+                                    &ensp;=&ensp;
+                                    #set($delim = "")
+                                    #foreach($cf in ${step.sumElements})
+                                        #set($i = ${cf.row} + 1)
+                                        #set($j = ${cf.column} + 1)
+                                        ${delim}(#frac(${cf.coefficient}))#cof(${step.matrixNo},$i,$j)
+                                        #set($delim = "&ensp;+&ensp;")
+                                    #end
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td class="rhsCell">
+                                <span>
+                                    &ensp;=&ensp;
+                                    #set($delim = "")
+                                    #foreach($cf in ${step.sumElements})
+                                        ${delim}(#frac(${cf.coefficient}))(#frac(${cf.cofactor}))
+                                        #set($delim = "&ensp;+&ensp;")
+                                    #end
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td class="rhsCell">
+                                <span>
+                                    &ensp;=&ensp;
+                                    #set($delim = "")
+                                    #foreach($cf in ${step.sumElements})
+                                        ${delim}#frac(${cf.result})
+                                        #set($delim = "&ensp;+&ensp;")
+                                    #end
+                                </span>
+                            </td>
+                        </tr>
+                        #if(${step.sumElements.size()} > 1)
+                            <tr>
+                                <td></td>
+                                <td class="rhsCell">
+                                    <span>
+                                        &ensp;=&ensp;#frac(${step.sum}) 
+                                    </span>
+                                </td>
+                            </tr>
+                        #end
+                    </table>
+                    <br /> 
+                #end
+                #if(${step.type} == "CROSS")
+                    <table>
+                        <tr>
+                            <td class="lhsCell">
+                                <span>
+                                    #mat(${step.matrixNo})
+                                </span>
+                            </td>
+                            <td class="rhsCell">
+                                <span>
+                                &ensp;=&ensp;
+                                (#frac(${step.a}))(#frac(${step.d}))&ensp;&minus;&ensp;(#frac(${step.b}))(#frac(${step.c}))
+                                </span>
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td>
+                            </td>
+                            <td class="rhsCell">
+                                <span>
+                                &ensp;=&ensp;
+                                #frac(${step.productAD})&ensp;&minus;&ensp;#frac(${step.productBC})
+                                </span>
+                            </td>
+                        </tr>  
+                        <tr>
+                            <td>
+                            </td>
+                            <td class="rhsCell">
+                                <span>
+                                &ensp;=&ensp;
+                                #frac(${step.determinant})
+                                </span>
+                            </td>
+                        </tr>  
+                    </table>
+                    <br /> 
+                #end
+            #end
+        </div>
+    </body>
+</html>
