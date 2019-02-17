@@ -1,51 +1,41 @@
 package exter.matrixdeterminant.matrix;
 
-import exter.matrixdeterminant.fraction.Fraction;
-import spark.Request;
+import javax.servlet.http.HttpServletRequest;
 
-public final class Matrix
-{
+import exter.matrixdeterminant.fraction.Fraction;
+
+public final class Matrix {
     private final Fraction[][] elements;
     
-    public Matrix(int size)
-    {
-        if(size < 1)
-        {
+    public Matrix(int size) {
+        if(size < 1) {
             throw new IllegalArgumentException();
         }
         this.elements = new Fraction[size][size];
-        for(int i = 0; i < size; i++)
-        {
-            for(int j = 0; j < size; j++)
-            {
+        for(int i = 0; i < size; i++) {
+            for(int j = 0; j < size; j++) {
                 this.elements[i][j] = new Fraction();
             }
         }
     }
 
-    public Matrix(Matrix m)
-    {
+    public Matrix(Matrix m) {
         int size = m.elements.length;
         this.elements = new Fraction[size][];
-        for(int i = 0; i < size; i++)
-        {
+        for(int i = 0; i < size; i++) {
             this.elements[i] = m.elements[i].clone();
         }
     }
 
-    public Matrix(final Request request)
-    {
-        int size = Integer.valueOf(request.queryParams("size"));
-        if(size < 1)
-        {
+    public Matrix(final HttpServletRequest request) {
+        int size = Integer.valueOf(request.getParameter("size"));
+        if(size < 1) {
             throw new IllegalArgumentException();
         }
         this.elements = new Fraction[size][size];
-        for(int i = 0; i < size; i++)
-        {
-            for(int j = 0; j < size; j++)
-            {
-                this.elements[i][j] = new Fraction(request.queryParams(String.format("matrix_%d_%d",i,j)));
+        for(int i = 0; i < size; i++) {
+            for(int j = 0; j < size; j++) {
+                this.elements[i][j] = new Fraction(request.getParameter(String.format("matrix_%d_%d",i,j)));
             }
         }
     }
@@ -54,16 +44,12 @@ public final class Matrix
     {
         int newSize = this.elements.length - 1;
         Matrix m = new Matrix(newSize);
-        for(int i = 0, k = 0; i < newSize; i++, k++)
-        {
-            if(i == row)
-            {
+        for(int i = 0, k = 0; i < newSize; i++, k++) {
+            if(i == row) {
                 k++;
             }
-            for(int j = 0,l = 0; j < newSize ; j++,l++)
-            {
-                if(j == col)
-                {
+            for(int j = 0,l = 0; j < newSize ; j++,l++) {
+                if(j == col) {
                     l++;
                 }
                 m.elements[i][j] = this.elements[k][l];
@@ -72,8 +58,7 @@ public final class Matrix
         return m;
     }
     
-    public int getSize()
-    {
+    public int getSize() {
         return this.elements.length;
     }
     

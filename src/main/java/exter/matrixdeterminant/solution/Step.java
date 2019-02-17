@@ -9,10 +9,8 @@ import java.util.stream.Stream;
 import exter.matrixdeterminant.fraction.Fraction;
 import exter.matrixdeterminant.matrix.Matrix;
 
-public abstract class Step
-{
-    enum Type
-    {
+public abstract class Step {
+    enum Type {
         ELEMENTS,
         MINOR,
         COFACTOR,
@@ -20,15 +18,13 @@ public abstract class Step
         CROSS
     }
     
-    static public final class ElementsStep extends Step
-    {
+    static public final class ElementsStep extends Step {
         private final Matrix source;
         private final boolean elementsCol;
         private final int elementsIndex;
         private final List<Integer> elements;
 
-        public ElementsStep(Matrix source,int matrixNo)
-        {
+        public ElementsStep(Matrix source,int matrixNo) {
             super(matrixNo);
             boolean column = false;
             int index = -1;
@@ -36,44 +32,34 @@ public abstract class Step
             List<Integer> bestElements = null;
             int size = source.getSize();
 
-            for(int i = 0; i < size; i++)
-            {
+            for(int i = 0; i < size; i++) {
                 int rowZeros = 0;
                 List<Integer> elements = new ArrayList<Integer>();
-                for(int j = 0; j < size; j++)
-                {
-                    if(source.getElement(i, j).isZero())
-                    {
+                for(int j = 0; j < size; j++) {
+                    if(source.getElement(i, j).isZero()) {
                         rowZeros++;
-                    } else
-                    {
+                    } else {
                         elements.add(j);
                     }
                 }
-                if(rowZeros > zeros)
-                {
+                if(rowZeros > zeros) {
                     index = i;
                     bestElements = elements;
                     zeros = rowZeros;
                 }
             }
 
-            for(int i = 0; i < size; i++)
-            {
+            for(int i = 0; i < size; i++) {
                 int colZeros = 0;
                 List<Integer> elements = new ArrayList<Integer>();
-                for(int j = 0; j < size; j++)
-                {
-                    if(source.getElement(j, i).isZero())
-                    {
+                for(int j = 0; j < size; j++) {
+                    if(source.getElement(j, i).isZero()) {
                         colZeros++;
-                    } else
-                    {
+                    } else {
                         elements.add(j);
                     }
                 }
-                if(colZeros > zeros)
-                {
+                if(colZeros > zeros) {
                     index = i;
                     bestElements = elements;
                     column = true;
@@ -89,61 +75,50 @@ public abstract class Step
 
         
         @Override
-        public Type getType()
-        {
+        public Type getType() {
             return Type.ELEMENTS;
         }
         
-        public Matrix getSource()
-        {
+        public Matrix getSource() {
             return source;
         }
         
-        public boolean isElementsColumn()
-        {
+        public boolean isElementsColumn() {
             return this.elementsCol;
         }
         
-        public int getElementsIndex()
-        {
+        public int getElementsIndex() {
             return this.elementsIndex;
         }
 
-        public List<Integer> getElements()
-        {
+        public List<Integer> getElements() {
             return this.elements;
         }
         
-        public int getElementRow(int k)
-        {
+        public int getElementRow(int k) {
             return this.elementsCol ? k : this.elementsIndex;
         }
 
-        public int getElementColumn(int k)
-        {
+        public int getElementColumn(int k) {
             return this.elementsCol ? this.elementsIndex : k;
         }
 
-        public Stream<Fraction> getElementStream()
-        {
+        public Stream<Fraction> getElementStream() {
             return this.elements.stream().map((k) -> this.source.getElement(this.getElementRow(k), getElementColumn(k)));
         }
 
-        public List<Fraction> getElementValues()
-        {
+        public List<Fraction> getElementValues() {
             return this.getElementStream().collect(Collectors.toList());
         }
     }
     
-    static public class MinorStep extends Step
-    {
+    static public class MinorStep extends Step {
         private final Matrix source;
         private final Matrix minor;
         private final int row,col;
         private final int parentMatrixNo;
 
-        public MinorStep(Matrix source,int matrixNo,int parentMatrixNo,int row,int col)
-        {
+        public MinorStep(Matrix source,int matrixNo,int parentMatrixNo,int row,int col) {
             super(matrixNo);
             this.source = source;
             this.minor = source.minor(row, col);
@@ -153,46 +128,38 @@ public abstract class Step
         }
         
         @Override
-        public Type getType()
-        {
+        public Type getType() {
             return Type.MINOR;
         }
 
-        public Matrix getSource()
-        {
+        public Matrix getSource() {
             return source;
         }
 
-        public Matrix getMinorMatrix()
-        {
+        public Matrix getMinorMatrix() {
             return minor;
         }
 
-        public int getParentMatrixNo()
-        {
+        public int getParentMatrixNo() {
             return this.parentMatrixNo;
         }
 
-        public int getRow()
-        {
+        public int getRow() {
             return this.row;
         }
         
-        public int getColumn()
-        {
+        public int getColumn() {
             return this.col;
         }
     }
 
-    static public class CofactorStep extends Step
-    {
+    static public class CofactorStep extends Step {
         private final int row,col;
         private final int parentMatrixNo;
         private final Fraction minor;
         private final int cofactor;
 
-        public CofactorStep(int matrixNo,int parentMatrixNo,int row,int col,Fraction minor)
-        {
+        public CofactorStep(int matrixNo,int parentMatrixNo,int row,int col,Fraction minor) {
             super(matrixNo);
             this.parentMatrixNo = parentMatrixNo;
             this.row = row;
@@ -202,117 +169,97 @@ public abstract class Step
         }
     
         @Override
-        public Type getType()
-        {
+        public Type getType() {
             return Type.COFACTOR;
         }
 
-        public int getRow()
-        {
+        public int getRow() {
             return this.row;
         }
         
-        public int getColumn()
-        {
+        public int getColumn() {
             return this.col;
         }
 
-        public int getParentMatrixNo()
-        {
+        public int getParentMatrixNo() {
             return this.parentMatrixNo;
         }
         
-        public Fraction getMinor()
-        {
+        public Fraction getMinor() {
             return this.minor;
         }
         
-        public int getCofactor()
-        {
+        public int getCofactor() {
             return this.cofactor;
         }
 
-        public Fraction getCofactorMinor()
-        {
+        public Fraction getCofactorMinor() {
             return this.minor.mul(this.cofactor);
         }
     }
-    static public class SumStep extends Step
-    {
-        static public class Element
-        {
+
+    static public class SumStep extends Step {
+        static public class Element {
             private final int row,col;
             private final Fraction cofactor;
             private final Fraction coefficient;
 
-            public Element(int row, int col, Fraction cofactor, Fraction coefficient)
-            {
+            public Element(int row, int col, Fraction cofactor, Fraction coefficient) {
                 this.row = row;
                 this.col = col;
                 this.cofactor = cofactor;
                 this.coefficient = coefficient;
             }
 
-            public Fraction getCofactor()
-            {
+            public Fraction getCofactor() {
                 return this.cofactor;
             }
 
-            public Fraction getCoefficient()
-            {
+            public Fraction getCoefficient() {
                 return this.coefficient;
             }
 
-            public int getRow()
-            {
+            public int getRow() {
                 return row;
             }
 
-            public int getColumn()
-            {
+            public int getColumn() {
                 return col;
             }
             
-            public Fraction getResult()
-            {
+            public Fraction getResult() {
                 return this.coefficient.mul(this.cofactor);
             }
         }
 
         private final List<Element> sum;
 
-        public SumStep(List<Element> sum,int matrixNo)
-        {
+        public SumStep(List<Element> sum,int matrixNo) {
             super(matrixNo);
             this.sum = new ArrayList<>(sum);
         }
 
         @Override
-        public Type getType()
-        {
+        public Type getType() {
             return Type.SUM;
         }
 
-        public List<Element> getSumElements()
-        {
+        public List<Element> getSumElements() {
             return Collections.unmodifiableList(this.sum);
         }
         
 
-        public Fraction getSum()
-        {
+        public Fraction getSum() {
             return this.sum.stream().map(Element::getResult).reduce(new Fraction(), Fraction::add);
         }
     }
     
-    static public final class CrossStep extends Step
-    {
-        private final Fraction a,b,c,d;
+    static public final class CrossStep extends Step {
 
+        private final Fraction a,b,c,d;
         private final Fraction ad,bc;
 
-        public CrossStep(int matrixNo, Fraction a,Fraction b,Fraction c,Fraction d)
-        {
+        public CrossStep(int matrixNo, Fraction a,Fraction b,Fraction c,Fraction d) {
             super(matrixNo);
             this.a = a;
             this.b = b;
@@ -323,59 +270,49 @@ public abstract class Step
         }
         
         @Override
-        public Type getType()
-        {
+        public Type getType() {
             return Type.CROSS;
         }
 
 
-        public Fraction getA()
-        {
+        public Fraction getA() {
             return this.a;
         }
 
-        public Fraction getB()
-        {
+        public Fraction getB() {
             return this.b;
         }
 
-        public Fraction getC()
-        {
+        public Fraction getC() {
             return this.c;
         }
 
-        public Fraction getD()
-        {
+        public Fraction getD() {
             return this.d;
         }
 
-        public Fraction getProductAD()
-        {
+        public Fraction getProductAD() {
            return this.ad;
         }
 
-        public Fraction getProductBC()
-        {
+        public Fraction getProductBC() {
            return this.bc; 
         }
 
-        public Fraction getDeterminant()
-        {
+        public Fraction getDeterminant() {
            return this.ad.sub(this.bc); 
         }
     }
 
     private final int matrixNo;
 
-    private Step(int matrixNo)
-    {
+    private Step(int matrixNo) {
         this.matrixNo = matrixNo;
     }
     
     public abstract Type getType();
 
-    public final int getMatrixNo()
-    {
+    public final int getMatrixNo() {
         return this.matrixNo;
     }
 }

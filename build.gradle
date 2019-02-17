@@ -14,6 +14,6 @@ compileJava   {
 
 dependencies {
     compile 'org.slf4j:slf4j-simple:1.7.25'
-    compile "com.sparkjava:spark-core:2.7.1"
+    compile 'io.javalin:javalin:2.6.0'
     compile 'org.apache.velocity:velocity-engine-core:2.0'
 }

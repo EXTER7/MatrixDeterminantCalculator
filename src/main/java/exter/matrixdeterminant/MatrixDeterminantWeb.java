@@ -4,6 +4,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -18,19 +19,15 @@ import exter.matrixdeterminant.solution.Step.CrossStep;
 import exter.matrixdeterminant.solution.Step.ElementsStep;
 import exter.matrixdeterminant.solution.Step.MinorStep;
 import exter.matrixdeterminant.solution.Step.SumStep;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.javalin.Context;
+import io.javalin.Javalin;
 
-public class MatrixDeterminantWeb
-{
+public class MatrixDeterminantWeb {
     private static Fraction determinant(Matrix input,Process process) {
         int size = input.getSize();
-        if(size == 1)
-        {
+        if(size == 1) {
             return input.getElement(0, 0);
-        } else if(size == 2)
-        {
+        } else if(size == 2) {
             CrossStep cross = new CrossStep(process.getMatrixNo(),
                                             input.getElement(0, 0),
                                             input.getElement(0, 1),
@@ -69,8 +66,7 @@ public class MatrixDeterminantWeb
         return sumStep.getSum();
     }
 
-    private static void calculateSolution(Matrix input,VelocityContext ctx)
-    {
+    private static void calculateSolution(Matrix input,VelocityContext ctx) {
         Process process = new Process();
         Fraction solution = determinant(input,process);
         ctx.put("input", input);
@@ -78,38 +74,28 @@ public class MatrixDeterminantWeb
         ctx.put("process", process.getSteps());
     }
   
-    private static Object inputPage(final Request request, final Response response) throws Exception
-    {
+    private static void inputPage(Context ctx) {
         StringWriter writer = new StringWriter();
-        VelocityContext ctx = new VelocityContext();
+        VelocityContext vctx = new VelocityContext();
     
-        inputTemplate.merge(ctx, writer);
-        return writer.toString();
+        inputTemplate.merge(vctx, writer);
+        ctx.html(writer.toString());
     }
   
-    private static Object outputPage(final Request request, final Response response) throws Exception
-    {
-        try
-        {
-            StringWriter writer = new StringWriter();
-            Matrix input;
-            try
-            {
-                input = new Matrix(request);
-            } catch (Exception e)
-            {
-                response.status(422);
-                return "Invalid request argument";
-            }
-            VelocityContext ctx = new VelocityContext();
-            calculateSolution(input,ctx);
-            outputTemplate.merge(ctx, writer);
-            return writer.toString();
-        } catch (Exception e)
-        {
-            response.status(500);
-            return "Error processing request: " + e.getMessage();
+    private static void outputPage(Context ctx) {
+        StringWriter writer = new StringWriter();
+        Matrix input;
+        try {
+            input = new Matrix(ctx.req);
+        } catch (Exception e) {
+            ctx.status(422);
+            ctx.result("Invalid request argument");
+            return;
         }
+        VelocityContext vctx = new VelocityContext();
+        calculateSolution(input,vctx);
+        outputTemplate.merge(vctx, writer);
+        ctx.html(writer.toString());
     }
 
 
@@ -117,8 +103,10 @@ public class MatrixDeterminantWeb
     static private Template outputTemplate;
     static private VelocityEngine ve;
     
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
+        Javalin web = Javalin.create().enableStaticFiles("pub").start(8080);
+        
+        
         ve = new VelocityEngine();
         ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath"); 
         ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -126,10 +114,10 @@ public class MatrixDeterminantWeb
         
         inputTemplate = ve.getTemplate("/vm/input.vm");
         outputTemplate = ve.getTemplate("/vm/output.vm");
-        Spark.exception(Exception.class, (exception, request, response) -> {
-            exception.printStackTrace();
+        web.exception(Exception.class, (ex,ctx) -> {
+            ctx.result(ExceptionUtils.getStackTrace(ex));
         });
-        Spark.get("/", MatrixDeterminantWeb::inputPage);
-        Spark.get("/calc", MatrixDeterminantWeb::outputPage);
+        web.get("/", MatrixDeterminantWeb::inputPage);
+        web.get("/calc", MatrixDeterminantWeb::outputPage);
     }
 }
