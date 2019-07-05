@@ -19,7 +19,7 @@ import exter.matrixdeterminant.solution.Step.CrossStep;
 import exter.matrixdeterminant.solution.Step.ElementsStep;
 import exter.matrixdeterminant.solution.Step.MinorStep;
 import exter.matrixdeterminant.solution.Step.SumStep;
-import io.javalin.Context;
+import io.javalin.http.Context;
 import io.javalin.Javalin;
 
 public class MatrixDeterminantWeb {
@@ -104,12 +104,21 @@ public class MatrixDeterminantWeb {
     static private VelocityEngine ve;
     
     public static void main(String[] args) {
-        Javalin web = Javalin.create().enableStaticFiles("pub").start(8080);
+        Javalin web = Javalin.create(config -> {
+            config.autogenerateEtags = true;
+            config.addStaticFiles("/pub");
+            config.asyncRequestTimeout = 10000L;
+            config.logIfServerNotStarted = true;
+            config.dynamicGzip = true;
+            config.enforceSsl = false;
+        }).start(8080);
         
         
         ve = new VelocityEngine();
-        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath"); 
-        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+        ve.setProperty(RuntimeConstants.RESOURCE_LOADERS,RuntimeConstants.RESOURCE_LOADER_CLASS);
+        ve.setProperty(RuntimeConstants.RESOURCE_LOADER + "." + RuntimeConstants.RESOURCE_LOADER_CLASS + "." + RuntimeConstants.RESOURCE_LOADER_CLASS,
+                       ClasspathResourceLoader.class.getName()); 
+       // ve.setProperty("resource.loaders", );
         ve.init();
         
         inputTemplate = ve.getTemplate("/vm/input.vm");
